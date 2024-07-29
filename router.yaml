@@ -1,0 +1,15 @@
+telemetry:
+  exporters:
+    logging:
+      # format: json
+      experimental_when_header:
+        - name: user-agent
+          match: .*
+          headers: false
+          body: true
+
+include_subgraph_errors:
+  all: true
+
+health_check:
+  enabled: false

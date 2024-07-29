@@ -1,0 +1,181 @@
+schema
+  @link(url: "https://specs.apollo.dev/link/v1.0")
+  @link(url: "https://specs.apollo.dev/join/v0.3", for: EXECUTION)
+{
+  query: Query
+}
+
+directive @join__enumValue(graph: join__Graph!) repeatable on ENUM_VALUE
+
+directive @join__field(graph: join__Graph, requires: join__FieldSet, provides: join__FieldSet, type: String, external: Boolean, override: String, usedOverridden: Boolean) repeatable on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @join__graph(name: String!, url: String!) on ENUM_VALUE
+
+directive @join__implements(graph: join__Graph!, interface: String!) repeatable on OBJECT | INTERFACE
+
+directive @join__type(graph: join__Graph!, key: join__FieldSet, extension: Boolean! = false, resolvable: Boolean! = true, isInterfaceObject: Boolean! = false) repeatable on OBJECT | INTERFACE | UNION | ENUM | INPUT_OBJECT | SCALAR
+
+directive @join__unionMember(graph: join__Graph!, member: String!) repeatable on UNION
+
+directive @link(url: String, as: String, for: link__Purpose, import: [link__Import]) repeatable on SCHEMA
+
+type AnotherPost implements Post & PostInfo & Item
+  @join__implements(graph: A, interface: "Post")
+  @join__implements(graph: A, interface: "PostInfo")
+  @join__implements(graph: A, interface: "Item")
+  @join__type(graph: A)
+{
+  id: ID!
+  commentInfo: CommentInfo
+}
+
+type ASimplePost implements Post & PostInfo & Item
+  @join__implements(graph: A, interface: "Post")
+  @join__implements(graph: A, interface: "PostInfo")
+  @join__implements(graph: A, interface: "Item")
+  @join__implements(graph: B, interface: "PostInfo")
+  @join__implements(graph: B, interface: "Post")
+  @join__type(graph: A, key: "id")
+  @join__type(graph: B, key: "id")
+{
+  id: ID!
+  commentInfo: CommentInfo @join__field(graph: A)
+}
+
+interface CommentInfo
+  @join__type(graph: A)
+{
+  lastAuthorNote: NoteItem
+}
+
+type Identity
+  @join__type(graph: A, key: "id")
+  @join__type(graph: B, key: "id")
+{
+  id: ID!
+  downvotedPosts: PostConnection @join__field(graph: A)
+  upvotedPosts: PostConnection @join__field(graph: A)
+}
+
+interface Item
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  id: ID!
+}
+
+type ItemConnection
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  edges: [ItemEdge]!
+}
+
+type ItemEdge
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  node: Item
+}
+
+scalar join__FieldSet
+
+enum join__Graph {
+  A @join__graph(name: "a", url: "http://localhost:8070/query")
+  B @join__graph(name: "b", url: "http://localhost:8071/query")
+}
+
+scalar link__Import
+
+enum link__Purpose {
+  """
+  `SECURITY` features provide metadata necessary to securely resolve fields.
+  """
+  SECURITY
+
+  """
+  `EXECUTION` features provide metadata necessary for operation execution.
+  """
+  EXECUTION
+}
+
+interface NoteItem
+  @join__type(graph: A)
+{
+  user: UserInfo!
+}
+
+interface Post
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  id: ID!
+  commentInfo: CommentInfo @join__field(graph: A)
+}
+
+type PostConnection
+  @join__type(graph: A)
+{
+  edges: [PostEdge]!
+}
+
+type PostEdge
+  @join__type(graph: A)
+{
+  node: Post
+}
+
+interface PostInfo
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  id: ID!
+  commentInfo: CommentInfo @join__field(graph: A)
+}
+
+type Query
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  identity: Identity @join__field(graph: A)
+  userInfoByName(name: String!): UserInfo @join__field(graph: B)
+}
+
+enum TimeRange
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  ALL @join__enumValue(graph: A) @join__enumValue(graph: B)
+  HOUR @join__enumValue(graph: A) @join__enumValue(graph: B)
+  DAY @join__enumValue(graph: A) @join__enumValue(graph: B)
+  WEEK @join__enumValue(graph: A) @join__enumValue(graph: B)
+  MONTH @join__enumValue(graph: A) @join__enumValue(graph: B)
+  YEAR @join__enumValue(graph: A) @join__enumValue(graph: B)
+}
+
+type UnavailableUser implements UserInfo
+  @join__implements(graph: A, interface: "UserInfo")
+  @join__implements(graph: B, interface: "UserInfo")
+  @join__type(graph: A, key: "id")
+  @join__type(graph: B, key: "id")
+{
+  id: ID!
+  isPermanentlySuspended: Boolean! @join__field(graph: B)
+}
+
+type User implements UserInfo
+  @join__implements(graph: A, interface: "UserInfo")
+  @join__implements(graph: B, interface: "UserInfo")
+  @join__type(graph: A, key: "id")
+  @join__type(graph: B, key: "id")
+{
+  id: ID!
+  elements(time: TimeRange = ALL): ItemConnection @join__field(graph: A)
+}
+
+interface UserInfo
+  @join__type(graph: A)
+  @join__type(graph: B)
+{
+  id: ID!
+}

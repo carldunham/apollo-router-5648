@@ -1,0 +1,87 @@
+# Py
+
+extend schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.2"
+    import: ["@key", "@external", "@shareable", "@composeDirective"]
+  )
+
+type Query {
+  identity: Identity
+}
+
+type Identity @key(fields: "id") {
+  id: ID!
+  downvotedPosts: PostConnection
+  upvotedPosts: PostConnection
+}
+
+type PostConnection {
+  edges: [PostEdge]!
+}
+
+type PostEdge {
+  node: Post
+}
+
+interface Post {
+  id: ID!
+  commentInfo: CommentInfo
+}
+
+interface PostInfo {
+  id: ID!
+  commentInfo: CommentInfo
+}
+
+interface CommentInfo {
+  lastAuthorNote: NoteItem
+}
+
+interface NoteItem {
+  user: UserInfo!
+}
+
+interface UserInfo {
+  id: ID!
+}
+
+type User implements UserInfo @key(fields: "id") {
+  id: ID!
+  elements(time: TimeRange = ALL): ItemConnection @shareable
+}
+
+type UnavailableUser implements UserInfo @key(fields: "id") {
+  id: ID!
+}
+
+type ItemConnection @shareable {
+  edges: [ItemEdge]!
+}
+
+type ItemEdge @shareable {
+  node: Item
+}
+
+interface Item {
+  id: ID!
+}
+
+enum TimeRange {
+  ALL
+  HOUR
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+type ASimplePost implements Post & PostInfo & Item @key(fields: "id") {
+  id: ID!
+  commentInfo: CommentInfo
+}
+
+type AnotherPost implements Post & PostInfo & Item {
+  id: ID!
+  commentInfo: CommentInfo
+}

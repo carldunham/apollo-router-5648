@@ -1,0 +1,61 @@
+# Go
+
+extend schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.2"
+    import: ["@key", "@external", "@shareable", "@composeDirective"]
+  )
+
+extend type Query {
+  userInfoByName(name: String!): UserInfo
+}
+
+type Identity @key(fields: "id") {
+  id: ID!
+}
+
+interface UserInfo {
+  id: ID!
+}
+
+type User implements UserInfo @key(fields: "id") {
+  id: ID!
+}
+
+type UnavailableUser implements UserInfo @key(fields: "id") {
+  id: ID!
+  isPermanentlySuspended: Boolean!
+}
+
+type ItemConnection @shareable {
+  edges: [ItemEdge]!
+}
+
+type ItemEdge @shareable {
+  node: Item
+}
+
+interface Item {
+  id: ID!
+}
+
+interface Post {
+  id: ID!
+}
+
+interface PostInfo {
+  id: ID!
+}
+
+enum TimeRange {
+  ALL
+  HOUR
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+type ASimplePost implements PostInfo & Post @key(fields: "id") {
+  id: ID!
+}

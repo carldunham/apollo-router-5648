@@ -1,0 +1,61 @@
+query UserProfile($time: TimeRange) {
+  feed: userInfoByName(name: "") {
+    ... on User {
+      elements(time: $time) {
+        edges {
+          node {
+            ...profileItemFragment
+          }
+        }
+      }
+    }
+    ...userProfileFeedStructuredDataFragment
+  }
+  identity {
+    upvotedPosts {
+      edges {
+        node {
+          ...profileItemFragment
+        }
+      }
+    }
+    downvotedPosts {
+      edges {
+        node {
+          ...profileItemFragment
+        }
+      }
+    }
+  }
+}
+
+fragment profileItemFragment on Item {
+  __typename
+  ... on PostInfo {
+    commentInfo {
+      lastAuthorNote {
+        __typename
+        user {
+          ... on UnavailableUser {
+            __typename
+            isPermanentlySuspended
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment userProfileFeedStructuredDataFragment on UserInfo {
+  __typename
+  id
+  ... on User {
+    elements(time: $time) {
+      edges {
+        node {
+          __typename
+        }
+      }
+    }
+  }
+}
